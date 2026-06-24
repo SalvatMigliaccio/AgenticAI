@@ -10,33 +10,71 @@ Questa repository raccoglie prototipi pratici per:
 - confrontare approcci diversi su task reali
 - costruire una base riusabile per esperimenti futuri
 
-## Cosa conterra questa repository
+## Visione della repository
 
-Nel tempo saranno presenti varie cartelle, ognuna dedicata a un prototipo o a una linea di ricerca specifica. L'idea e mantenere esempi piccoli, testabili e facili da confrontare.
+Questa repo non ospita un unico prodotto, ma una collezione di prototipi organizzati per area di ricerca.
+L'obiettivo e avere piu cartelle indipendenti, ciascuna focalizzata su uno scenario specifico (agenti, tool use, RAG, orchestrazione), in modo da facilitare testing, confronto e apprendimento.
 
-Aree principali attuali:
-- AgenticAI/: prototipi agent-based e test su orchestrazione agenti
-- RAG/: prototipi Retrieval-Augmented Generation, incluse varianti con backend/frontend
+## Prototipi presenti
 
-## Focus su multi-agent
+| Cartella | Obiettivo | Stato |
+| --- | --- | --- |
+| AgenticAI/CalendarAI_Agent | Prototipo agentico con tool esterni per calendario e meteo | In sviluppo |
+| AgenticAI/example | Esempi minimi per esperimenti rapidi | In sviluppo |
+| RAG/Langchain/QA_RAG | Prototipo RAG semplice su PDF per studio del flusso end-to-end | In sviluppo |
+| RAG/Langchain/Langchain_qdrant_RAG | Prototipo RAG piu strutturato con backend e frontend | In sviluppo |
 
-Una parte centrale del repository e il testing multi-agent per studio:
-- coordinamento tra agenti con ruoli diversi
-- uso di tools esterni (API, calendari, meteo, retrieval)
+## Focus su Agentic AI e Multi-Agent
+
+La parte principale del progetto e lo studio del comportamento agentico:
+- orchestrazione di agenti con compiti distinti
+- integrazione di tool esterni per eseguire azioni reali
+- gestione dei loop decisionali in stile ReAct
 - valutazione del comportamento in scenari semplici e complessi
-- confronto tra versioni e strategie di orchestrazione
+
+## Tool utilizzati
+
+Di seguito i principali tool e componenti usati nei prototipi.
+
+### LLM e inferenza
+- Ollama: esecuzione locale di modelli LLM
+- Mistral: modello usato in alcuni agenti locali
+- Groq: provider per inferenza remota nei prototipi QA
+
+### Framework agentici e RAG
+- LangChain: orchestrazione agenti, tool calling e pipeline RAG
+- LangChain Community/Core: componenti per loader, tool e integrazione
+
+### Embeddings e retrieval
+- Nomic embed text via Ollama: embeddings locali
+- HuggingFace Embeddings: embeddings sentence-transformers
+- Qdrant: vector database per ricerca semantica
+- InMemoryVectorStore: archivio vettoriale leggero per test veloci
+
+### Tool esterni integrati dagli agenti
+- Google Calendar API: creazione eventi da agente
+- OpenWeatherMap API: meteo e verifica pioggia
+
+### Infrastruttura applicativa
+- FastAPI + Uvicorn: backend API
+- React + Vite: frontend per interfacce di test
+- Docker + Docker Compose: ambiente locale riproducibile
+
+### Utility dati
+- PyPDF: parsing di documenti PDF
+- Python dotenv: gestione variabili ambiente
 
 ## Struttura e convenzioni
 
 Ogni prototipo puo includere:
 - codice sorgente
-- requisiti/dipendenze
-- README locale con scopo e istruzioni di esecuzione
+- file requirements o package manager equivalenti
+- README locale con scopo e istruzioni di avvio
 - script di test o demo
 
 ## Stato del progetto
 
-Work in progress: la struttura puo evolvere mentre i prototipi vengono consolidati.
+Work in progress: la struttura evolvera con nuovi prototipi e refactor incrementali.
 
 ## Nota
 

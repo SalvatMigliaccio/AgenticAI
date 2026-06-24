@@ -34,7 +34,7 @@ La parte principale del progetto e lo studio del comportamento agentico:
 
 ## Tool utilizzati
 
-Di seguito i principali tool e componenti usati nei prototipi.
+Di seguito i principali tool e componenti usati nei prototipi. in ordine di utilizzo:
 
 ### LLM e inferenza
 - Ollama: esecuzione locale di modelli LLM

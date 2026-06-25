@@ -52,16 +52,20 @@ A metadata filter to pass in as well
 Most vector databases support metadata filters, so this doesn't require any new databases or indexes.
 """
 
-from langchain_huggingface import HuggingFacePipeline
+from langchain_huggingface import HuggingFacePipeline, ChatHuggingFace
 from langchain_classic.retrievers.self_query.base import SelfQueryRetriever
 from langchain_classic.chains.query_constructor.base import AttributeInfo
 
-# LLM locale via HuggingFace (al posto di OpenAI)
-llm = HuggingFacePipeline.from_model_id(
-    model_id="google/flan-t5-large",
-    task="text2text-generation",
-    pipeline_kwargs={"max_new_tokens": 256, "do_sample": False},
+# LLM locale via HuggingFace (al posto di OpenAI).
+# flan-t5 non riesce a produrre il JSON strutturato richiesto da SelfQueryRetriever:
+# serve un modello instruct piu' capace. Lo definiamo UNA volta e lo riusiamo sotto.
+_pipeline = HuggingFacePipeline.from_model_id(
+    model_id="Qwen/Qwen2.5-3B-Instruct",
+    task="text-generation",
+    pipeline_kwargs={"max_new_tokens": 512, "do_sample": False, "return_full_text": False},
 )
+# ChatHuggingFace applica il chat template del modello: indispensabile per i modelli instruct.
+chat_model = ChatHuggingFace(llm=_pipeline)
 
 # Descrizione dei metadati su cui il retriever può filtrare
 metadata_field_info = [
@@ -79,7 +83,7 @@ metadata_field_info = [
 document_content_description = "Documenti tecnici su crittografia post-quantum"
 
 retriever = SelfQueryRetriever.from_llm(
-    llm,
+    chat_model,
     vectordb,
     document_content_description,
     metadata_field_info,
@@ -87,7 +91,7 @@ retriever = SelfQueryRetriever.from_llm(
 )
 
 question = "What is the main topic of the CBOM paper?"
-docs = retriever.get_relevant_documents(question)
+docs = retriever.invoke(question)
 for d in docs:
     print(d.metadata)
     print(d.page_content)
@@ -99,13 +103,8 @@ from langchain_classic.retrievers.document_compressors import LLMChainExtractor
 def pretty_print_docs(docs):
     print(f"\n{'-' * 100}\n".join([f"Document {i+1}:\n\n" + d.page_content for i, d in enumerate(docs)]))
     
-# Wrap our vectorstore
-llm = HuggingFacePipeline.from_model_id(
-    model_id="google/flan-t5-large",
-    task="text2text-generation",
-    pipeline_kwargs={"max_new_tokens": 256, "do_sample": False},
-)
-compressor = LLMChainExtractor.from_llm(llm)
+# Wrap our vectorstore: riusiamo lo stesso chat_model definito sopra.
+compressor = LLMChainExtractor.from_llm(chat_model)
 
 compression_retriever = ContextualCompressionRetriever(
     base_compressor=compressor, 
@@ -113,7 +112,7 @@ compression_retriever = ContextualCompressionRetriever(
     )
 
 question = "What is the main topic of the CBOM paper?"
-docs = compression_retriever.get_relevant_documents(question)
+docs = compression_retriever.invoke(question)
 pretty_print_docs(docs)
 
 
@@ -143,8 +142,8 @@ svm_retriever = SVMRetriever.from_texts(splits,embedding)
 tfidf_retriever = TFIDFRetriever.from_texts(splits)
 
 question = "What is the main topic of the CBOM paper?"
-docs_svm=svm_retriever.get_relevant_documents(question)
+docs_svm=svm_retriever._get_relevant_documents(question)
 print(docs_svm[0])
 
-docs_tfidf=tfidf_retriever.get_relevant_documents(question)
+docs_tfidf=tfidf_retriever._get_relevant_documents(question)
 print(docs_tfidf[0])

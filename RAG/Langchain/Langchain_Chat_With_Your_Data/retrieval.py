@@ -142,8 +142,8 @@ svm_retriever = SVMRetriever.from_texts(splits,embedding)
 tfidf_retriever = TFIDFRetriever.from_texts(splits)
 
 question = "What is the main topic of the CBOM paper?"
-docs_svm=svm_retriever._get_relevant_documents(question)
+docs_svm=svm_retriever.invoke(question)
 print(docs_svm[0])
 
-docs_tfidf=tfidf_retriever._get_relevant_documents(question)
+docs_tfidf=tfidf_retriever.invoke(question)
 print(docs_tfidf[0])

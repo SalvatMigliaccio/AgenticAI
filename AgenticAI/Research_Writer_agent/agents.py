@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import httpx
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
@@ -8,6 +9,18 @@ from langchain_core.messages import HumanMessage
 from tools import duckduckgo_tool, scrape_tool
 
 load_dotenv()  # Load environment variables from .env file
+
+
+def check_ollama_running() -> bool:
+    """Check if Ollama service is running and accessible."""
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    try:
+        response = httpx.get(f"{base_url}/api/tags", timeout=2)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"❌ Ollama check failed: {e}")
+        print(f"   Make sure Ollama is running at {base_url}")
+        return False
 
 # ---------------------------------------------------------------------------
 # LLM — shared by both agents.
@@ -139,6 +152,8 @@ class ResearchAgent:
         scratchpad = ""
         
         for iteration in range(self.max_iterations):
+            print(f"\n[Iteration {iteration + 1}/{self.max_iterations}]")
+            
             # Format the prompt with current state
             prompt_text = self.prompt_template.format(
                 tools=self._tools_description(),
@@ -148,39 +163,55 @@ class ResearchAgent:
             )
             
             # Call the LLM
-            response = self.llm.invoke(prompt_text)
-            output = response.content if hasattr(response, 'content') else str(response)
+            print("Calling LLM...")
+            try:
+                response = self.llm.invoke(prompt_text)
+                output = response.content if hasattr(response, 'content') else str(response)
+            except Exception as e:
+                print(f"LLM Error: {e}")
+                return {"output": f"Error calling LLM: {str(e)}"}
+            
+            print(f"LLM Response:\n{output[:500]}...")  # Print first 500 chars
             
             # Check for Final Answer
             if "Final Answer:" in output:
                 final_answer = output.split("Final Answer:")[-1].strip()
+                print(f"\nFinal Answer received!")
                 return {"output": final_answer}
             
             # Parse and execute tool calls
             thought_action = self._parse_output(output)
             if not thought_action or "action" not in thought_action:
                 # If we can't parse, assume we're done
+                print("Could not parse action, returning output")
                 return {"output": output}
             
             action = thought_action["action"]
             action_input = thought_action["action_input"]
             
+            print(f"Action: {action}, Input: {action_input[:100]}...")
+            
             # Execute the tool
             if action not in self.tools:
-                observation = f"Error: unknown tool '{action}'"
+                observation = f"Error: unknown tool '{action}'. Available tools: {list(self.tools.keys())}"
             else:
                 try:
-                    observation = self.tools[action].func(action_input)
+                    tool = self.tools[action]
+                    # LangChain tools have a run() method
+                    observation = tool.run(action_input)
+                    print(f"Tool executed, observation length: {len(observation)}")
                 except Exception as e:
                     observation = f"Error executing {action}: {str(e)}"
+                    print(f"Tool error: {e}")
             
             # Update scratchpad
             scratchpad += f"\nThought: {thought_action.get('thought', '')}\n"
             scratchpad += f"Action: {action}\n"
             scratchpad += f"Action Input: {action_input}\n"
-            scratchpad += f"Observation: {observation}\n"
+            scratchpad += f"Observation: {observation[:500]}\n"  # Truncate for readability
         
         # Max iterations reached, return what we have
+        print(f"\nMax iterations ({self.max_iterations}) reached")
         return {"output": f"Research incomplete after {self.max_iterations} iterations.\n\n{scratchpad}"}
     
     def _parse_output(self, output: str) -> dict:

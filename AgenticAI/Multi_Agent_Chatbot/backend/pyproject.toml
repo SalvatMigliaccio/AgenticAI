@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-agent-chatbot-backend"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    # --- frameworks ---
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "sse-starlette>=2.1",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+
+    # --- Agent ---
+    "langgraph>=0.2",              # il grafo a stati
+    "langgraph-checkpoint-postgres>=2.0",  # persistenza conversazioni su Postgres
+    "langchain-core>=0.3",         # tipi messaggi (HumanMessage, AIMessage, ...)
+    "openai>=1.30",                # client async usato per chat ED embeddings
+
+    # --- RAG ---
+    "qdrant-client>=1.9",          # vector DB
+    "rank-bm25>=0.2",              # componente sparsa BM25 della retrieval ibrida
+
+    # --- infrastructure ---
+    "redis>=5.0",                  # semantic cache
+    "psycopg[binary]>=3.1",        # driver Postgres per il checkpointer
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.4", "mypy>=1.10"]
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+strict = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

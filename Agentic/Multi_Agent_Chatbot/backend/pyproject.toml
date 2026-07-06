@@ -13,6 +13,7 @@ dependencies = [
     "sse-starlette>=2.1",
     "pydantic>=2.7",
     "pydantic-settings>=2.2",
+    
 
     # --- Agent ---
     "langgraph>=0.2",              # il grafo a stati
@@ -28,6 +29,7 @@ dependencies = [
     "redis>=5.0",                  # semantic cache
     "psycopg[binary]>=3.1",        # driver Postgres per il checkpointer
     "httpx>=0.27",
+    "numpy>=1.26",   
 ]
 
 [project.optional-dependencies]

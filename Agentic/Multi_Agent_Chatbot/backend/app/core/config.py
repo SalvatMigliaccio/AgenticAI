@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     LLM_BASE_URL: str = "http://vllm:8000/v1"
     LLM_API_KEY: str = "not-needed"           # vLLM non controlla la key
     LLM_BASE_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"  # usato dal generalista e dal giudice
+    USE_ADAPTERS: bool = False                       # se True → usa adapter LoRA per specialisti
 
     # --- Embeddings (server OpenAI-compatible dedicato, es. vLLM/TEI con bge-m3) ---  ← vLLM
     EMBED_BASE_URL: str = "http://vllm-embed:8000/v1"

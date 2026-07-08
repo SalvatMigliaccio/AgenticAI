@@ -1,9 +1,9 @@
 :root {
-  --bg: #f3f5f9;
+  --bg: #eef3ff;
   --card: #ffffff;
-  --ink: #12172a;
+  --ink: #0f1730;
   --muted: #616c82;
-  --line: #d8dfeb;
+  --line: #d4ddf0;
   --soft: #eaf0fb;
   --dark: #0c1324;
 }
@@ -20,11 +20,12 @@ body,
 }
 
 body {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Manrope", sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at 20% 18%, #e0e8ff 0%, transparent 32%),
-    radial-gradient(circle at 82% 20%, #ffe6da 0%, transparent 30%),
+    radial-gradient(circle at 12% 14%, rgba(156, 190, 255, 0.42) 0%, transparent 30%),
+    radial-gradient(circle at 84% 18%, rgba(255, 196, 215, 0.35) 0%, transparent 28%),
+    radial-gradient(circle at 48% 88%, rgba(166, 244, 228, 0.3) 0%, transparent 30%),
     var(--bg);
 }
 
@@ -50,8 +51,8 @@ button {
   margin-bottom: 18px;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
   padding: 10px 14px;
   display: flex;
   justify-content: space-between;
@@ -63,6 +64,7 @@ button {
   align-items: center;
   gap: 8px;
   font-size: 1.2rem;
+  font-family: "Sora", sans-serif;
 }
 
 .brand-dot {
@@ -92,6 +94,16 @@ button {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.nav-cta:hover,
+.hero-actions button:hover,
+.arch-foot button:hover,
+.composer button:hover,
+.thread-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(12, 19, 36, 0.22);
 }
 
 .hero {
@@ -109,10 +121,11 @@ button {
 
 .hero h1 {
   margin: 12px 0 8px;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(2.6rem, 6vw, 5.1rem);
-  line-height: 0.95;
-  font-weight: 500;
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2.45rem, 6vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  font-weight: 600;
   color: #1d2946;
 }
 
@@ -133,9 +146,17 @@ button {
 
 .hero-actions .ghost,
 .chat-topbar .ghost {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.72);
   color: #1f2f4d;
   border: 1px solid var(--line);
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
 }
 
 .modes-card,
@@ -143,10 +164,11 @@ button {
 .architecture {
   margin-top: 22px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 22px;
   padding: 18px;
-  box-shadow: 0 10px 28px rgba(25, 40, 74, 0.08);
+  box-shadow: 0 18px 40px rgba(31, 51, 93, 0.12);
+  backdrop-filter: blur(16px);
 }
 
 .modes-card h2,
@@ -187,9 +209,9 @@ button {
 
 .mode-grid h3 {
   margin: 8px 0;
-  font-size: 1.75rem;
-  line-height: 1;
-  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-family: "Sora", sans-serif;
   font-weight: 600;
 }
 
@@ -210,6 +232,37 @@ button {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.github-cards {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.github-card {
+  border: 1px solid #c7d6f1;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fcfdff 0%, #edf3ff 100%);
+  padding: 12px;
+  display: grid;
+  gap: 5px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.github-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(40, 65, 116, 0.16);
+}
+
+.github-card strong {
+  font-size: 0.95rem;
+}
+
+.github-card span {
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .tech-card {
@@ -303,6 +356,12 @@ button {
   gap: 12px;
 }
 
+.home-back {
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
 .chat-topbar h1 {
   margin: 0;
   font-size: 1.1rem;
@@ -320,8 +379,9 @@ button {
 .chat-panel {
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.93);
-  box-shadow: 0 10px 30px rgba(22, 39, 74, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 18px 36px rgba(30, 51, 98, 0.12);
+  backdrop-filter: blur(14px);
 }
 
 .left-panel {
@@ -422,8 +482,19 @@ button {
 }
 
 .msg.assistant {
-  background: #f7faff;
+  background: linear-gradient(180deg, #f7fbff 0%, #eff6ff 100%);
   border-color: #d9e5ff;
+}
+
+.assistant-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 10px;
+  align-items: start;
+}
+
+.assistant-answer {
+  min-width: 0;
 }
 
 .msg header,
@@ -506,7 +577,7 @@ button {
 }
 
 .judge-panel {
-  margin-top: 8px;
+  margin-top: 0;
   border: 1px solid #d8dfef;
   background: #f9fbff;
   border-radius: 10px;
@@ -650,7 +721,12 @@ button {
 @media (max-width: 1080px) {
   .mode-grid,
   .tech-grid,
+  .github-cards,
   .page-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .assistant-layout {
     grid-template-columns: 1fr;
   }
 

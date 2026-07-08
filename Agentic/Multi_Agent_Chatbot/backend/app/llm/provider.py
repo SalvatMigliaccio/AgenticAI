@@ -31,6 +31,7 @@ async def chat(
         messages=messages,            # type: ignore[arg-type]
         temperature=temperature,
         max_tokens=max_tokens,
+        timeout=settings.LLM_REQUEST_TIMEOUT_SEC,
         **extra,
     )
     return resp.choices[0].message.content or ""
@@ -43,6 +44,7 @@ async def chat_stream(
     stream = await _client.chat.completions.create(
         model=model, messages=messages,   # type: ignore[arg-type]
         temperature=temperature, max_tokens=max_tokens, stream=True,
+        timeout=settings.LLM_REQUEST_TIMEOUT_SEC,
     )
     async for chunk in stream:
         delta = chunk.choices[0].delta.content

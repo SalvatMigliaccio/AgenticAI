@@ -1,3 +1,6 @@
+import os
+import socket
+import tempfile
 from pathlib import Path
 
 from httpx import ConnectError
@@ -14,10 +17,18 @@ def _is_connection_failure(error: Exception) -> bool:
 class QdrantStore:
     def __init__(self) -> None:
         self._remote = AsyncQdrantClient(url=settings.QDRANT_URL)
-        local_path = Path(__file__).resolve().parents[2] / ".qdrant"
-        local_path.mkdir(parents=True, exist_ok=True)
-        self._local = AsyncQdrantClient(path=str(local_path))
+        self._local: AsyncQdrantClient | None = None
         self._active = self._remote
+
+    def _get_local(self) -> AsyncQdrantClient:
+        if self._local is None:
+            # Per-process fallback path: evita lock contention tra worker multipli.
+            host = socket.gethostname().replace(" ", "_")
+            pid = os.getpid()
+            local_path = Path(tempfile.gettempdir()) / f"agenticai-qdrant-{host}-{pid}"
+            local_path.mkdir(parents=True, exist_ok=True)
+            self._local = AsyncQdrantClient(path=str(local_path))
+        return self._local
 
     async def _call(self, method_name: str, *args, **kwargs):
         method = getattr(self._active, method_name)
@@ -25,7 +36,7 @@ class QdrantStore:
             return await method(*args, **kwargs)
         except Exception as error:
             if self._active is self._remote and _is_connection_failure(error):
-                self._active = self._local
+                self._active = self._get_local()
                 return await getattr(self._active, method_name)(*args, **kwargs)
             raise
 

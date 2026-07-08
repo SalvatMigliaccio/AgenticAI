@@ -30,12 +30,14 @@ class Settings(BaseSettings):
     # --- Comportamento del grafo ---
     ROUTER_CONFIDENCE_THRESHOLD: float = 0.55  # sotto questa soglia → fallback LLM classifier
     JUDGE_PASS_THRESHOLD: float = 3.5          # overall medio per "pass" (rubrica 1-5)
-    MAX_REFLECTION_RETRIES: int = 1            # quante volte lo specialista può rigenerare
+    MAX_REFLECTION_RETRIES: int = 0            # quante volte lo specialista può rigenerare
 
     # --- Generazione ---
     SPECIALIST_TEMPERATURE: float = 0.3        # specialisti: precisi, poco creativi
     JUDGE_TEMPERATURE: float = 0.0             # giudice: deterministico
-    MAX_TOKENS: int = 1024
+    MAX_TOKENS: int = 768
+    LLM_REQUEST_TIMEOUT_SEC: float = 90.0
+    EMBED_REQUEST_TIMEOUT_SEC: float = 45.0
     
     #--- RAG ---
     RAG_TOP_K: int = 4 # passaggi da recuperare per la RAG (se il dominio la usa)

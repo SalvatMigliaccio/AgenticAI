@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 const CHAT_STREAM_ENDPOINT = `${API_BASE}/chat/stream`;
+const STREAM_TIMEOUT_MS = Number(import.meta.env.VITE_STREAM_TIMEOUT_MS || 120000);
+const GITHUB_MAIN_URL = import.meta.env.VITE_GITHUB_MAIN_URL || "https://github.com";
+const GITHUB_BACKEND_URL = import.meta.env.VITE_GITHUB_BACKEND_URL || "https://github.com";
+const GITHUB_FRONTEND_URL = import.meta.env.VITE_GITHUB_FRONTEND_URL || "https://github.com";
 
 const routeColorMap = {
   crypto_pqc: "#2dbe74",
@@ -217,6 +221,9 @@ function HomePage({ onStartChat, agents, architectureRef }) {
           >
             Vedi architettura
           </button>
+          <a className="ghost github-link" href={GITHUB_MAIN_URL} target="_blank" rel="noreferrer">
+            Go to GitHub
+          </a>
         </div>
       </section>
 
@@ -255,6 +262,21 @@ function HomePage({ onStartChat, agents, architectureRef }) {
             </article>
           ))}
         </div>
+
+        <div className="github-cards">
+          <a href={GITHUB_MAIN_URL} target="_blank" rel="noreferrer" className="github-card">
+            <strong>Project Repository</strong>
+            <span>Spec, compose, training, deployment</span>
+          </a>
+          <a href={GITHUB_BACKEND_URL} target="_blank" rel="noreferrer" className="github-card">
+            <strong>Backend Source</strong>
+            <span>FastAPI, LangGraph, RAG, judge loop</span>
+          </a>
+          <a href={GITHUB_FRONTEND_URL} target="_blank" rel="noreferrer" className="github-card">
+            <strong>Frontend Source</strong>
+            <span>Hero landing, SSE chat, observability UI</span>
+          </a>
+        </div>
       </section>
 
       <section className="architecture" id="architecture" ref={architectureRef}>
@@ -290,10 +312,17 @@ function ChatScreen({
   activeThreadLabel,
   onBackHome,
 }) {
+  function onComposerKeyDown(evt) {
+    if (evt.key === "Enter" && !evt.shiftKey) {
+      evt.preventDefault();
+      evt.currentTarget.form?.requestSubmit();
+    }
+  }
+
   return (
     <div className="chat-screen">
       <header className="chat-topbar">
-        <button type="button" className="ghost" onClick={onBackHome}>← Home</button>
+        <button type="button" className="ghost home-back" onClick={onBackHome}>← Home</button>
         <h1>AgenticAI Console</h1>
       </header>
 
@@ -336,15 +365,23 @@ function ChatScreen({
                     </span>
                   )}
                 </header>
-                <p>{msg.text}</p>
-                {msg.meta && (
-                  <footer>
-                    <span>Confidence: {toPercent(msg.meta.confidence)}</span>
-                    <span>Judge overall: {msg.meta.judge?.overall ?? "-"}</span>
-                    <span>Trace steps: {msg.meta.trace?.length ?? 0}</span>
-                  </footer>
+                {msg.role === "assistant" ? (
+                  <div className="assistant-layout">
+                    <div className="assistant-answer">
+                      <p>{msg.text}</p>
+                      {msg.meta && (
+                        <footer>
+                          <span>Confidence: {toPercent(msg.meta.confidence)}</span>
+                          <span>Judge overall: {msg.meta.judge?.overall ?? "-"}</span>
+                          <span>Trace steps: {msg.meta.trace?.length ?? 0}</span>
+                        </footer>
+                      )}
+                    </div>
+                    {msg.meta && <JudgePanel meta={msg.meta} />}
+                  </div>
+                ) : (
+                  <p>{msg.text}</p>
                 )}
-                {msg.role === "assistant" && msg.meta && <JudgePanel meta={msg.meta} />}
               </article>
             ))}
             {pending && <div className="typing">Elaborazione in corso...</div>}
@@ -354,6 +391,7 @@ function ChatScreen({
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onComposerKeyDown}
               placeholder="Scrivi una domanda..."
               rows={3}
             />
@@ -384,6 +422,7 @@ function ChatScreen({
 
 export default function App() {
   const architectureRef = useRef(null);
+  const typingTimersRef = useRef(new Map());
   const [screen, setScreen] = useState("home");
   const [query, setQuery] = useState("");
   const [pending, setPending] = useState(false);
@@ -420,6 +459,31 @@ export default function App() {
 
   const activeThreadLabel = useMemo(() => threadId.slice(0, 18), [threadId]);
 
+  function stopPreviewAnimation(messageId) {
+    const timer = typingTimersRef.current.get(messageId);
+    if (timer) {
+      clearInterval(timer);
+      typingTimersRef.current.delete(messageId);
+    }
+  }
+
+  function animatePreview(messageId, fullText) {
+    if (!fullText) return;
+    stopPreviewAnimation(messageId);
+
+    let index = 0;
+    const step = Math.max(8, Math.floor(fullText.length / 75));
+    const timer = setInterval(() => {
+      index = Math.min(fullText.length, index + step);
+      patchAssistantMessage(messageId, { text: fullText.slice(0, index) });
+      if (index >= fullText.length) {
+        stopPreviewAnimation(messageId);
+      }
+    }, 20);
+
+    typingTimersRef.current.set(messageId, timer);
+  }
+
   function patchAssistantMessage(messageId, patch) {
     setMessages((prev) =>
       prev.map((msg) => {
@@ -437,10 +501,14 @@ export default function App() {
   }
 
   async function streamChat(queryText, currentThreadId, assistantId) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
+
     const response = await fetch(CHAT_STREAM_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: queryText, thread_id: currentThreadId }),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -454,70 +522,99 @@ export default function App() {
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
-
+    try {
       while (true) {
-        const sep = buffer.indexOf("\n\n");
-        if (sep === -1) break;
+        const { value, done } = await reader.read();
+        if (done) break;
 
-        const block = buffer.slice(0, sep);
-        buffer = buffer.slice(sep + 2);
-        const { event, data } = parseSSEBlock(block);
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
-        if (!data) continue;
+        while (true) {
+          const sep = buffer.indexOf("\n\n");
+          if (sep === -1) break;
 
-        let parsed;
-        try {
-          parsed = JSON.parse(data);
-        } catch {
-          continue;
-        }
+          const block = buffer.slice(0, sep);
+          buffer = buffer.slice(sep + 2);
+          const { event, data } = parseSSEBlock(block);
 
-        if (event === "route") {
-          const routePatch = {
-            route: parsed.route || "general",
-            confidence: parsed.confidence,
-            method: parsed.method || "-",
-            routePending: false,
-          };
-          setLive((prev) => ({ ...prev, ...routePatch }));
-          patchAssistantMessage(assistantId, { meta: routePatch });
-          continue;
-        }
+          if (!data) continue;
 
-        if (event === "judge") {
-          setLive((prev) => ({ ...prev, judgeOverall: parsed.overall ?? null }));
-          patchAssistantMessage(assistantId, {
-            meta: {
-              judge: parsed,
-              judgePending: false,
-            },
-          });
-          continue;
-        }
+          let parsed;
+          try {
+            parsed = JSON.parse(data);
+          } catch {
+            continue;
+          }
 
-        if (event === "answer") {
-          patchAssistantMessage(assistantId, {
-            text: parsed.answer || "Nessuna risposta disponibile.",
-          });
-          continue;
-        }
-
-        if (event === "done") {
-          patchAssistantMessage(assistantId, {
-            meta: {
-              trace: Array.isArray(parsed.trace) ? parsed.trace : [],
-              complete: true,
+          if (event === "route") {
+            const routePatch = {
+              route: parsed.route || "general",
+              confidence: parsed.confidence,
+              method: parsed.method || "-",
               routePending: false,
-              judgePending: false,
-            },
-          });
+            };
+            setLive((prev) => ({ ...prev, ...routePatch }));
+            patchAssistantMessage(assistantId, { meta: routePatch });
+            continue;
+          }
+
+          if (event === "specialist") {
+            if (typeof parsed.preview === "string" && parsed.preview.trim()) {
+              animatePreview(assistantId, parsed.preview);
+            }
+            patchAssistantMessage(assistantId, {
+              meta: {
+                specialistPending: false,
+                judgePending: true,
+              },
+            });
+            continue;
+          }
+
+          if (event === "judge_status") {
+            patchAssistantMessage(assistantId, {
+              meta: {
+                judgePending: parsed.status === "running",
+              },
+            });
+            continue;
+          }
+
+          if (event === "judge") {
+            setLive((prev) => ({ ...prev, judgeOverall: parsed.overall ?? null }));
+            patchAssistantMessage(assistantId, {
+              meta: {
+                judge: parsed,
+                judgePending: false,
+              },
+            });
+            continue;
+          }
+
+          if (event === "answer") {
+            stopPreviewAnimation(assistantId);
+            patchAssistantMessage(assistantId, {
+              text: parsed.answer || "Nessuna risposta disponibile.",
+            });
+            continue;
+          }
+
+          if (event === "done") {
+            stopPreviewAnimation(assistantId);
+            patchAssistantMessage(assistantId, {
+              meta: {
+                trace: Array.isArray(parsed.trace) ? parsed.trace : [],
+                complete: true,
+                routePending: false,
+                judgePending: false,
+              },
+            });
+          }
         }
       }
+    } finally {
+      clearTimeout(timeoutId);
+      stopPreviewAnimation(assistantId);
     }
   }
 
@@ -547,6 +644,7 @@ export default function App() {
         route: null,
         confidence: null,
         method: null,
+        specialistPending: true,
         routePending: true,
         judgePending: true,
         complete: false,
@@ -558,8 +656,13 @@ export default function App() {
 
     try {
       await streamChat(content, threadId, assistantId);
-    } catch {
-      setError("Errore durante la chiamata API. Controlla backend e proxy Nginx.");
+    } catch (err) {
+      stopPreviewAnimation(assistantId);
+      const timeoutMessage =
+        err instanceof DOMException && err.name === "AbortError"
+          ? "La richiesta ha superato il tempo massimo. Riprova con una domanda più specifica."
+          : "Errore durante la chiamata API. Controlla backend e proxy Nginx.";
+      setError(timeoutMessage);
       patchAssistantMessage(assistantId, {
         text: "Non sono riuscito a completare lo stream. Riprova tra pochi secondi.",
       });

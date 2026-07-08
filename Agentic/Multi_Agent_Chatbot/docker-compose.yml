@@ -74,7 +74,7 @@ services:
       - "80:80"
 
   qdrant:
-    image: qdrant/qdrant:v1.13.2
+    image: qdrant/qdrant:v1.18.0
     container_name: ma_qdrant
     restart: unless-stopped
     ports:

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 const CHAT_STREAM_ENDPOINT = `${API_BASE}/chat/stream`;
-const STREAM_TIMEOUT_MS = Number(import.meta.env.VITE_STREAM_TIMEOUT_MS || 120000);
 const GITHUB_MAIN_URL = import.meta.env.VITE_GITHUB_MAIN_URL || "https://github.com";
 const GITHUB_BACKEND_URL = import.meta.env.VITE_GITHUB_BACKEND_URL || "https://github.com";
 const GITHUB_FRONTEND_URL = import.meta.env.VITE_GITHUB_FRONTEND_URL || "https://github.com";
@@ -21,6 +20,31 @@ const techCards = [
   { title: "Nginx Gateway", text: "Reverse proxy + load balancer verso backend multipli per alta concorrenza." },
   { title: "Postgres Checkpointer", text: "Memoria conversazionale persistente per thread e valutazioni." },
   { title: "Redis + Cache", text: "Base pronta per caching semantico e ottimizzazione delle latenze." },
+];
+
+const heroStats = [
+  { value: "3x", label: "More structured answers" },
+  { value: "Live", label: "Routing and judging visibility" },
+  { value: "RAG + FT", label: "Knowledge plus specialist behavior" },
+];
+
+const collaborationCards = [
+  {
+    title: "Responses",
+    text: "Inspect the specialist output before final synthesis and evaluation close the loop.",
+  },
+  {
+    title: "Sources",
+    text: "Use local knowledge when relevant, without blocking specialist reasoning when context is sparse.",
+  },
+  {
+    title: "Disagreements",
+    text: "Highlight low-confidence areas where the model should be more explicit or conservative.",
+  },
+  {
+    title: "Team Reason",
+    text: "The LLM-as-a-Judge critiques the answer quality after the specialist has already responded.",
+  },
 ];
 
 function toPercent(value) {
@@ -65,6 +89,9 @@ function JudgePanel({ meta }) {
   const judge = meta.judge || {};
   const judgePending = Boolean(meta.judgePending);
   const hasJudge = typeof judge.overall === "number";
+  const showJudge = Boolean(meta.answerVisible) && (judgePending || hasJudge);
+
+  if (!showJudge) return null;
 
   return (
     <section className="judge-panel">
@@ -122,69 +149,6 @@ function JudgePanel({ meta }) {
   );
 }
 
-function MermaidArchitecture() {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function renderDiagram() {
-      try {
-        const mermaidModule = await import("mermaid");
-        const mermaid = mermaidModule.default;
-
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: "neutral",
-          securityLevel: "loose",
-          flowchart: {
-            curve: "basis",
-            htmlLabels: true,
-          },
-        });
-
-        const definition = `
-flowchart LR
-  U[User Browser] --> G[Nginx Gateway]
-  G --> B1[Backend 1 - FastAPI]
-  G --> B2[Backend 2 - FastAPI]
-  B1 --> L[LangGraph Pipeline]
-  B2 --> L
-  L --> R[Router]
-  R --> S[Specialist]
-  S --> J[LLM-as-a-Judge]
-  J --> F[Finalize]
-  S --> Q[(Qdrant)]
-  B1 --> P[(Postgres Checkpointer)]
-  B1 --> C[(Redis)]
-  B2 --> P
-  B2 --> C
-  S --> O[(Ollama / LLM Server)]
-  J --> O
-`;
-
-        const id = `arch-${Date.now().toString(36)}`;
-        const { svg } = await mermaid.render(id, definition);
-
-        if (mounted && ref.current) {
-          ref.current.innerHTML = svg;
-        }
-      } catch {
-        if (mounted && ref.current) {
-          ref.current.innerHTML = "<p>Diagramma Mermaid non disponibile.</p>";
-        }
-      }
-    }
-
-    renderDiagram();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  return <div className="mermaid-canvas" ref={ref} aria-label="Architecture diagram" />;
-}
-
 function HomePage({ onStartChat, agents, architectureRef }) {
   return (
     <div className="home-page">
@@ -202,28 +166,122 @@ function HomePage({ onStartChat, agents, architectureRef }) {
       </header>
 
       <section className="hero" id="top">
-        <p className="hero-kicker">Multi-agent assistant platform</p>
-        <h1>
-          The leading AI
-          <br />
-          Knowledge Console
-        </h1>
-        <p className="hero-lead">
-          Chatta con specialisti orchestrati, osserva routing e judging in tempo reale,
-          e lavora su una pipeline progettata per affidabilita, tracciabilita e scale-out.
-        </p>
-        <div className="hero-actions">
-          <button type="button" onClick={onStartChat}>Start chat</button>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => architectureRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          >
-            Vedi architettura
-          </button>
-          <a className="ghost github-link" href={GITHUB_MAIN_URL} target="_blank" rel="noreferrer">
-            Go to GitHub
-          </a>
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <p className="hero-kicker">Multi-agent assistant platform</p>
+            <h1>
+              A product-style
+              <br />
+              AI knowledge workspace
+            </h1>
+            <p className="hero-lead">
+              Un frontend SaaS per orchestrare specialisti, vedere il giudizio di qualita in tempo reale
+              e combinare RAG locale, fine-tuning di dominio e observability del reasoning.
+            </p>
+            <div className="hero-actions">
+              <button type="button" onClick={onStartChat}>Start chat</button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => architectureRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              >
+                Vedi architettura
+              </button>
+              <a className="ghost github-link" href={GITHUB_MAIN_URL} target="_blank" rel="noreferrer">
+                Go to GitHub
+              </a>
+            </div>
+
+            <div className="hero-stats">
+              {heroStats.map((stat) => (
+                <article key={stat.label} className="stat-pill">
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="hero-showcase">
+            <div className="showcase-window">
+              <div className="showcase-topbar">
+                <span className="showcase-dot" />
+                <span className="showcase-dot" />
+                <span className="showcase-dot" />
+              </div>
+              <div className="showcase-headline">AI Team Workspace</div>
+              <div className="showcase-composer">Ask about PQC, eIDAS, API design, or your local knowledge base...</div>
+              <div className="showcase-modes">
+                <span>Specialist routing</span>
+                <span>RAG support</span>
+                <span>Judge scoring</span>
+              </div>
+              <div className="showcase-answer">
+                <div className="showcase-answer-main">
+                  <small>Assistant Response</small>
+                  <p>
+                    The specialist answers first. Then the judge scores faithfulness, relevance,
+                    completeness and safety on the visible answer.
+                  </p>
+                </div>
+                <div className="showcase-judge-card">
+                  <small>Judge Panel</small>
+                  <strong>4.4 / 5 overall</strong>
+                  <span>PASS • domain aligned • trace ready</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="collaboration-section">
+        <div className="collaboration-copy">
+          <span className="section-chip">HOW AI COLLABORATION WORKS</span>
+          <h2>AI Collaboration Explained</h2>
+          <p>
+            Il team AI crea risposte migliori facendo collaborare specialisti, retrieval locale e un
+            LLM-as-a-Judge che controlla la qualita solo dopo che la risposta e gia disponibile a schermo.
+          </p>
+        </div>
+        <div className="collaboration-metrics">
+          <article className="metric-card">
+            <strong>60%</strong>
+            <span>Reduced factual errors with post-answer judging</span>
+          </article>
+          <article className="metric-card">
+            <strong>2x</strong>
+            <span>Higher depth score on specialist-first responses</span>
+          </article>
+        </div>
+        <div className="collaboration-board">
+          <div className="board-main">
+            <small>AI TEAM RESPONSE</small>
+            <div className="board-skeleton">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <p>
+              See specialist answers, observe route confidence, and attach a visible Judge panel for
+              the final quality pass without blocking the response.
+            </p>
+            <div className="board-tags">
+              <span>Responses</span>
+              <span>Sources</span>
+              <span>Disagreements</span>
+              <span>Judge</span>
+            </div>
+          </div>
+          <div className="board-side-grid">
+            {collaborationCards.map((card) => (
+              <article key={card.title} className="board-side-card">
+                <h3>{card.title}</h3>
+                <p>{card.text}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -286,8 +344,12 @@ function HomePage({ onStartChat, agents, architectureRef }) {
           in un SVG/diagramma definitivo con i tuoi blocchi personalizzati.
         </p>
 
-        <div className="diagram mermaid-shell">
-          <MermaidArchitecture />
+        <div className="diagram image-shell">
+          <img
+            className="architecture-image"
+            src="/architecture-overview.svg"
+            alt="Architecture overview of frontend, gateway, backend, Qdrant, Postgres, Redis and Ollama"
+          />
         </div>
 
         <div className="arch-foot">
@@ -501,14 +563,10 @@ export default function App() {
   }
 
   async function streamChat(queryText, currentThreadId, assistantId) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
-
     const response = await fetch(CHAT_STREAM_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: queryText, thread_id: currentThreadId }),
-      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -565,7 +623,6 @@ export default function App() {
             patchAssistantMessage(assistantId, {
               meta: {
                 specialistPending: false,
-                judgePending: true,
               },
             });
             continue;
@@ -595,6 +652,9 @@ export default function App() {
             stopPreviewAnimation(assistantId);
             patchAssistantMessage(assistantId, {
               text: parsed.answer || "Nessuna risposta disponibile.",
+                meta: {
+                  answerVisible: true,
+                },
             });
             continue;
           }
@@ -613,7 +673,6 @@ export default function App() {
         }
       }
     } finally {
-      clearTimeout(timeoutId);
       stopPreviewAnimation(assistantId);
     }
   }
@@ -646,7 +705,8 @@ export default function App() {
         method: null,
         specialistPending: true,
         routePending: true,
-        judgePending: true,
+        judgePending: false,
+        answerVisible: false,
         complete: false,
         judge: {},
         trace: [],
@@ -656,15 +716,15 @@ export default function App() {
 
     try {
       await streamChat(content, threadId, assistantId);
-    } catch (err) {
+    } catch {
       stopPreviewAnimation(assistantId);
-      const timeoutMessage =
-        err instanceof DOMException && err.name === "AbortError"
-          ? "La richiesta ha superato il tempo massimo. Riprova con una domanda più specifica."
-          : "Errore durante la chiamata API. Controlla backend e proxy Nginx.";
-      setError(timeoutMessage);
+      setError("Errore durante la chiamata API. Controlla backend e proxy Nginx.");
       patchAssistantMessage(assistantId, {
         text: "Non sono riuscito a completare lo stream. Riprova tra pochi secondi.",
+        meta: {
+          answerVisible: true,
+          judgePending: false,
+        },
       });
     } finally {
       setPending(false);

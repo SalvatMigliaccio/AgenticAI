@@ -40,7 +40,6 @@ async def embed(texts: list[str]) -> list[list[float]]:
         resp = await _embed_client.embeddings.create(
             model=settings.EMBED_MODEL,
             input=texts,
-            timeout=settings.EMBED_REQUEST_TIMEOUT_SEC,
         )
         # L'API ritorna gli embedding nell'ordine dell'input.
         return [item.embedding for item in resp.data]

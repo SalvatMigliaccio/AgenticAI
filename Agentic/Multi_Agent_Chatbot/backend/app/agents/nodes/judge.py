@@ -60,7 +60,7 @@ async def judge_node(state: GraphState) -> dict:
             model=settings.LLM_BASE_MODEL,      # il giudice è sempre il base model, imparziale
             temperature=settings.JUDGE_TEMPERATURE,
             json_mode=True,
-            max_tokens=300,
+            max_tokens=160,
         )
         verdict = _parse_verdict(raw)
     except Exception:

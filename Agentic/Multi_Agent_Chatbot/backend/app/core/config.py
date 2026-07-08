@@ -35,9 +35,9 @@ class Settings(BaseSettings):
     # --- Generazione ---
     SPECIALIST_TEMPERATURE: float = 0.3        # specialisti: precisi, poco creativi
     JUDGE_TEMPERATURE: float = 0.0             # giudice: deterministico
-    MAX_TOKENS: int = 768
-    LLM_REQUEST_TIMEOUT_SEC: float = 90.0
-    EMBED_REQUEST_TIMEOUT_SEC: float = 45.0
+    MAX_TOKENS: int = 512
+    LLM_REQUEST_TIMEOUT_SEC: float = 60.0
+    EMBED_REQUEST_TIMEOUT_SEC: float = 20.0
     
     #--- RAG ---
     RAG_TOP_K: int = 4 # passaggi da recuperare per la RAG (se il dominio la usa)

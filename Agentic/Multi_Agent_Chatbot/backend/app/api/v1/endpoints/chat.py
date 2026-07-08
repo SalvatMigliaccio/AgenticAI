@@ -35,8 +35,10 @@ async def chat_stream_endpoint(req: ChatRequest, request: Request):
                         "reflection": specialist_reflection,
                         "preview": delta.get("draft_answer", ""),
                     })}
-                    # Avvio esplicito dello stato judge nel frontend: il giudice parte
-                    # subito dopo lo specialista e può valutare mentre mostriamo la preview.
+                    yield {"event": "answer", "data": json.dumps({
+                        "answer": delta.get("draft_answer", ""),
+                        "stage": "specialist",
+                    })}
                     yield {"event": "judge_status", "data": json.dumps({"status": "running"})}
                 elif node == "judge":
                     yield {"event": "judge", "data": json.dumps(delta.get("judge", {}))}
@@ -44,6 +46,7 @@ async def chat_stream_endpoint(req: ChatRequest, request: Request):
                 elif node == "finalize":
                     yield {"event": "answer", "data": json.dumps({
                         "answer": delta.get("final_answer", ""),
+                        "stage": "finalize",
                     })}
         # Chiusura: mando il trace completo per il pannello di debug del frontend.
         yield {"event": "done", "data": json.dumps({"trace": final_state.get("trace", [])})}

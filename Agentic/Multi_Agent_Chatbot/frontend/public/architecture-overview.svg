@@ -1,0 +1,83 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="70" x2="1450" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#EEF4FF"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFFFFF" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#F3F7FF" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#121A30"/>
+      <stop offset="1" stop-color="#22345F"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1600" height="900" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="30" flood-color="#2F4A7A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect x="30" y="30" width="1540" height="840" rx="36" fill="url(#bg)"/>
+  <circle cx="220" cy="180" r="130" fill="#DDE8FF" fill-opacity="0.55"/>
+  <circle cx="1390" cy="160" r="120" fill="#FBE2EC" fill-opacity="0.7"/>
+  <circle cx="1250" cy="730" r="170" fill="#DFF7F2" fill-opacity="0.7"/>
+
+  <g filter="url(#shadow)">
+    <rect x="150" y="140" width="1300" height="620" rx="34" fill="url(#card)"/>
+  </g>
+
+  <text x="220" y="215" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Architecture Overview</text>
+  <text x="220" y="255" fill="#617190" font-family="Inter, Arial, sans-serif" font-size="20">Request flow, specialist orchestration and infrastructure services in one visual.</text>
+
+  <rect x="220" y="320" width="220" height="130" rx="24" fill="#FFFFFF" stroke="#D5DDF0"/>
+  <text x="252" y="372" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Frontend React</text>
+  <text x="252" y="402" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Hero, chat UI, SSE events,</text>
+  <text x="252" y="424" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">live Judge panel</text>
+
+  <rect x="500" y="320" width="220" height="130" rx="24" fill="#FFFFFF" stroke="#D5DDF0"/>
+  <text x="532" y="372" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Nginx Gateway</text>
+  <text x="532" y="402" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Reverse proxy, static assets,</text>
+  <text x="532" y="424" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">API routing and rate limiting</text>
+
+  <rect x="780" y="300" width="280" height="170" rx="28" fill="url(#dark)"/>
+  <text x="818" y="360" fill="#F4F7FF" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Backend FastAPI + LangGraph</text>
+  <text x="818" y="396" fill="#CAD6F5" font-family="Inter, Arial, sans-serif" font-size="14">Router → Specialist → Judge → Finalize</text>
+  <text x="818" y="420" fill="#CAD6F5" font-family="Inter, Arial, sans-serif" font-size="14">Streaming responses and trace updates</text>
+
+  <rect x="1140" y="320" width="220" height="130" rx="24" fill="#FFFFFF" stroke="#D5DDF0"/>
+  <text x="1172" y="372" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Ollama / LLM Server</text>
+  <text x="1172" y="402" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Base model or specialist adapter</text>
+  <text x="1172" y="424" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">for domain-specific answers</text>
+
+  <rect x="355" y="560" width="210" height="120" rx="22" fill="#F8FBFF" stroke="#CFD9EE"/>
+  <text x="387" y="610" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Qdrant</text>
+  <text x="387" y="638" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Knowledge chunks, dense/sparse</text>
+  <text x="387" y="660" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">retrieval support</text>
+
+  <rect x="695" y="560" width="210" height="120" rx="22" fill="#F8FBFF" stroke="#CFD9EE"/>
+  <text x="727" y="610" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Postgres</text>
+  <text x="727" y="638" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Checkpoint memory, threads,</text>
+  <text x="727" y="660" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">conversation persistence</text>
+
+  <rect x="1035" y="560" width="210" height="120" rx="22" fill="#F8FBFF" stroke="#CFD9EE"/>
+  <text x="1067" y="610" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Redis</text>
+  <text x="1067" y="638" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Ready for semantic caching</text>
+  <text x="1067" y="660" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">and low-latency state helpers</text>
+
+  <path d="M440 385H500" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M720 385H780" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M1060 385H1140" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
+
+  <path d="M920 470V520" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M920 520H460V560" stroke="#91A3C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M920 520H800V560" stroke="#91A3C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M920 520H1140V560" stroke="#91A3C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="920" cy="520" r="8" fill="#91A3C9"/>
+  <circle cx="500" cy="385" r="8" fill="#91A3C9"/>
+  <circle cx="780" cy="385" r="8" fill="#91A3C9"/>
+  <circle cx="1140" cy="385" r="8" fill="#91A3C9"/>
+
+  <rect x="864" y="356" width="112" height="34" rx="17" fill="#F4B860" fill-opacity="0.22" stroke="#E9B457"/>
+  <text x="886" y="378" fill="#83561A" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700">Judge loop</text>
+</svg>

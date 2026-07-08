@@ -1,9 +1,53 @@
-from qdrant_client import QradntClient
-from qdrant_client.models import Distance, VectorParams, CollectionStatus, CreateCollection
+from pathlib import Path
+
+from httpx import ConnectError
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.models import Distance, VectorParams, CollectionStatus
 from app.core.config import settings
 
-#client async singleton verso Qdrant (usato dal retriever RAG)
-client = AsyncQdrantClient(url=settings.QDRANT_URL)
+
+def _is_connection_failure(error: Exception) -> bool:
+    message = str(error).lower()
+    return isinstance(error, ConnectError) or "all connection attempts failed" in message
+
+
+class QdrantStore:
+    def __init__(self) -> None:
+        self._remote = AsyncQdrantClient(url=settings.QDRANT_URL)
+        local_path = Path(__file__).resolve().parents[2] / ".qdrant"
+        local_path.mkdir(parents=True, exist_ok=True)
+        self._local = AsyncQdrantClient(path=str(local_path))
+        self._active = self._remote
+
+    async def _call(self, method_name: str, *args, **kwargs):
+        method = getattr(self._active, method_name)
+        try:
+            return await method(*args, **kwargs)
+        except Exception as error:
+            if self._active is self._remote and _is_connection_failure(error):
+                self._active = self._local
+                return await getattr(self._active, method_name)(*args, **kwargs)
+            raise
+
+    async def get_collection(self, *args, **kwargs):
+        return await self._call("get_collection", *args, **kwargs)
+
+    async def create_collection(self, *args, **kwargs):
+        return await self._call("create_collection", *args, **kwargs)
+
+    async def upsert(self, *args, **kwargs):
+        return await self._call("upsert", *args, **kwargs)
+
+    async def scroll(self, *args, **kwargs):
+        return await self._call("scroll", *args, **kwargs)
+
+    async def search(self, *args, **kwargs):
+        return await self._call("search", *args, **kwargs)
+
+
+# client async singleton verso Qdrant (usa il server remoto quando disponibile,
+# altrimenti ripiega su uno storage locale persistente per lo sviluppo)
+client = QdrantStore()
 
 
 async def ensure_collection(name: str) -> None:
@@ -15,8 +59,6 @@ async def ensure_collection(name: str) -> None:
     except Exception:
         # La collection non esiste: la creo
         await client.create_collection(
-            CreateCollection(
-                name=name,
-                vectors=VectorParams(size=settings.EMBED_DIM, distance=Distance.COSINE),
-            )
+            collection_name=name,
+            vectors_config=VectorParams(size=settings.EMBED_DIM, distance=Distance.COSINE),
         )

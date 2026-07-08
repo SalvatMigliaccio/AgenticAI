@@ -1,5 +1,6 @@
 from openai import AsyncOpenAI
 from app.core.config import settings
+from collections.abc import AsyncGenerator
 
 # Un solo client async riusabile (gestisce connection pooling internamente).
 # Punta al nostro endpoint OpenAI-compatible: con vLLM è http://vllm:8000/v1
@@ -33,4 +34,18 @@ async def chat(
         **extra,
     )
     return resp.choices[0].message.content or ""
+
+async def chat_stream(
+    messages: list[dict[str, str]], *, model: str,
+    temperature: float = 0.3, max_tokens: int = settings.MAX_TOKENS,
+) -> AsyncGenerator[str, None]:
+    """Come chat(), ma yielda i token man mano (per uno streaming futuro più fine)."""
+    stream = await _client.chat.completions.create(
+        model=model, messages=messages,   # type: ignore[arg-type]
+        temperature=temperature, max_tokens=max_tokens, stream=True,
+    )
+    async for chunk in stream:
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield delta
     

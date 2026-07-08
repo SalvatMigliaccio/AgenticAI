@@ -1,0 +1,5 @@
+FROM qwen2.5:7b-instruct
+ADAPTER ./training/adapters/eidas/adapter.gguf
+PARAMETER temperature 0.3
+PARAMETER num_predict 1024
+PARAMETER top_p 0.9

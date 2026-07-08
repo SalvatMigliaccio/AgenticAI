@@ -1,0 +1,116 @@
+services:
+  backend_1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ma_backend_1
+    restart: unless-stopped
+    environment:
+      LLM_BASE_URL: http://host.docker.internal:11434/v1
+      LLM_API_KEY: ollama
+      LLM_BASE_MODEL: qwen2.5:7b-instruct
+      EMBED_BASE_URL: http://host.docker.internal:11434/v1
+      EMBED_API_KEY: ollama
+      EMBED_MODEL: bge-m3
+      EMBED_DIM: 1024
+      USE_ADAPTERS: "false"
+      QDRANT_URL: http://qdrant:6333
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_DSN: postgresql://chat:chat_pw@postgres:5432/chatdb
+      CORS_ORIGINS: '["http://localhost", "http://127.0.0.1"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  backend_2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ma_backend_2
+    restart: unless-stopped
+    environment:
+      LLM_BASE_URL: http://host.docker.internal:11434/v1
+      LLM_API_KEY: ollama
+      LLM_BASE_MODEL: qwen2.5:7b-instruct
+      EMBED_BASE_URL: http://host.docker.internal:11434/v1
+      EMBED_API_KEY: ollama
+      EMBED_MODEL: bge-m3
+      EMBED_DIM: 1024
+      USE_ADAPTERS: "false"
+      QDRANT_URL: http://qdrant:6333
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_DSN: postgresql://chat:chat_pw@postgres:5432/chatdb
+      CORS_ORIGINS: '["http://localhost", "http://127.0.0.1"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ma_frontend
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./infra/nginx
+      dockerfile: Dockerfile
+    container_name: ma_gateway
+    restart: unless-stopped
+    depends_on:
+      - backend_1
+      - backend_2
+      - frontend
+    ports:
+      - "80:80"
+
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: ma_qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ma_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatdb
+      POSTGRES_USER: chat
+      POSTGRES_PASSWORD: chat_pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chat -d chatdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ma_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  qdrant_storage:
+  postgres_data:
+  redis_data:

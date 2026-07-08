@@ -16,7 +16,10 @@ def _is_connection_failure(error: Exception) -> bool:
 
 class QdrantStore:
     def __init__(self) -> None:
-        self._remote = AsyncQdrantClient(url=settings.QDRANT_URL)
+        self._remote = AsyncQdrantClient(
+            url=settings.QDRANT_URL,
+            check_compatibility=False,
+        )
         self._local: AsyncQdrantClient | None = None
         self._active = self._remote
 

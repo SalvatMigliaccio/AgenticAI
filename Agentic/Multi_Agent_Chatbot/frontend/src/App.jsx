@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 const CHAT_STREAM_ENDPOINT = `${API_BASE}/chat/stream`;
@@ -9,6 +9,15 @@ const routeColorMap = {
   software_eng: "#4aa6ff",
   general: "#9c8cf0",
 };
+
+const techCards = [
+  { title: "LangGraph Agents", text: "Pipeline con router, specialist, LLM-as-a-Judge e reflection loop." },
+  { title: "Hybrid RAG", text: "Retrieval su knowledge locale con indexing Qdrant e fallback robusti." },
+  { title: "FastAPI + SSE", text: "Streaming eventi live (route, judge, answer) fino al finalize." },
+  { title: "Nginx Gateway", text: "Reverse proxy + load balancer verso backend multipli per alta concorrenza." },
+  { title: "Postgres Checkpointer", text: "Memoria conversazionale persistente per thread e valutazioni." },
+  { title: "Redis + Cache", text: "Base pronta per caching semantico e ottimizzazione delle latenze." },
+];
 
 function toPercent(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "-";
@@ -109,7 +118,273 @@ function JudgePanel({ meta }) {
   );
 }
 
+function MermaidArchitecture() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function renderDiagram() {
+      try {
+        const mermaidModule = await import("mermaid");
+        const mermaid = mermaidModule.default;
+
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "neutral",
+          securityLevel: "loose",
+          flowchart: {
+            curve: "basis",
+            htmlLabels: true,
+          },
+        });
+
+        const definition = `
+flowchart LR
+  U[User Browser] --> G[Nginx Gateway]
+  G --> B1[Backend 1 - FastAPI]
+  G --> B2[Backend 2 - FastAPI]
+  B1 --> L[LangGraph Pipeline]
+  B2 --> L
+  L --> R[Router]
+  R --> S[Specialist]
+  S --> J[LLM-as-a-Judge]
+  J --> F[Finalize]
+  S --> Q[(Qdrant)]
+  B1 --> P[(Postgres Checkpointer)]
+  B1 --> C[(Redis)]
+  B2 --> P
+  B2 --> C
+  S --> O[(Ollama / LLM Server)]
+  J --> O
+`;
+
+        const id = `arch-${Date.now().toString(36)}`;
+        const { svg } = await mermaid.render(id, definition);
+
+        if (mounted && ref.current) {
+          ref.current.innerHTML = svg;
+        }
+      } catch {
+        if (mounted && ref.current) {
+          ref.current.innerHTML = "<p>Diagramma Mermaid non disponibile.</p>";
+        }
+      }
+    }
+
+    renderDiagram();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return <div className="mermaid-canvas" ref={ref} aria-label="Architecture diagram" />;
+}
+
+function HomePage({ onStartChat, agents, architectureRef }) {
+  return (
+    <div className="home-page">
+      <header className="home-nav">
+        <div className="brand">
+          <span className="brand-dot" />
+          <strong>AgenticAI</strong>
+        </div>
+        <nav>
+          <a href="#features">Features</a>
+          <a href="#technology">Technology</a>
+          <a href="#architecture">Architecture</a>
+          <button type="button" className="nav-cta" onClick={onStartChat}>Entra in chat</button>
+        </nav>
+      </header>
+
+      <section className="hero" id="top">
+        <p className="hero-kicker">Multi-agent assistant platform</p>
+        <h1>
+          The leading AI
+          <br />
+          Knowledge Console
+        </h1>
+        <p className="hero-lead">
+          Chatta con specialisti orchestrati, osserva routing e judging in tempo reale,
+          e lavora su una pipeline progettata per affidabilita, tracciabilita e scale-out.
+        </p>
+        <div className="hero-actions">
+          <button type="button" onClick={onStartChat}>Start chat</button>
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => architectureRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          >
+            Vedi architettura
+          </button>
+        </div>
+      </section>
+
+      <section className="modes-card" id="features">
+        <h2>Three AI Modes</h2>
+        <div className="mode-grid">
+          <article>
+            <small>AI CHAT</small>
+            <h3>Chat with knowledge</h3>
+            <p>Una domanda, un thread, risposta con trace e controllo qualitativo.</p>
+          </article>
+          <article>
+            <small>AI OBSERVABILITY</small>
+            <h3>Compare reasoning steps</h3>
+            <p>Route, confidence, judge e feedback mostrati live nello stesso flusso.</p>
+          </article>
+          <article className="dark">
+            <small>AI TEAM</small>
+            <h3>Collaboration pipeline</h3>
+            <p>Router -&gt; Specialist -&gt; Judge -&gt; Finalize con supporto reflection.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="technology" id="technology">
+        <h2>Technology Stack</h2>
+        <p>
+          L'app combina retrieval locale, orchestrazione ad agenti e valutazione automatica della qualita.
+          Le componenti sotto sono quelle realmente in uso nel progetto.
+        </p>
+        <div className="tech-grid">
+          {techCards.map((card) => (
+            <article key={card.title} className="tech-card">
+              <h3>{card.title}</h3>
+              <p>{card.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="architecture" id="architecture" ref={architectureRef}>
+        <h2>Architecture Overview</h2>
+        <p>
+          Di seguito trovi un diagramma visuale in pagina. Se vuoi, nel prossimo step lo trasformiamo
+          in un SVG/diagramma definitivo con i tuoi blocchi personalizzati.
+        </p>
+
+        <div className="diagram mermaid-shell">
+          <MermaidArchitecture />
+        </div>
+
+        <div className="arch-foot">
+          <span>Domini caricati: {agents.length}</span>
+          <button type="button" onClick={onStartChat}>Apri chat operativa</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ChatScreen({
+  query,
+  setQuery,
+  pending,
+  agents,
+  messages,
+  sendMessage,
+  resetThread,
+  error,
+  live,
+  activeThreadLabel,
+  onBackHome,
+}) {
+  return (
+    <div className="chat-screen">
+      <header className="chat-topbar">
+        <button type="button" className="ghost" onClick={onBackHome}>← Home</button>
+        <h1>AgenticAI Console</h1>
+      </header>
+
+      <div className="page-shell">
+        <aside className="left-panel">
+          <p className="subhead">Knowledge-first chat per testare routing, giudice e trace.</p>
+
+          <div className="thread-card">
+            <div>
+              <strong>Thread</strong>
+              <div className="mono">{activeThreadLabel}</div>
+            </div>
+            <button type="button" onClick={resetThread}>Nuovo thread</button>
+          </div>
+
+          <h2>Domini</h2>
+          <ul className="agent-list">
+            {agents.map((agent) => (
+              <li key={agent.key}>
+                <span className="dot" style={{ background: routeColorMap[agent.key] || "#8a8a8a" }} />
+                <div>
+                  <strong>{agent.label}</strong>
+                  <p>{agent.description}</p>
+                </div>
+              </li>
+            ))}
+            {agents.length === 0 && <li className="empty">Nessun dominio disponibile dal backend.</li>}
+          </ul>
+        </aside>
+
+        <main className="chat-panel">
+          <div className="messages">
+            {messages.map((msg) => (
+              <article key={msg.id} className={`msg ${msg.role}`}>
+                <header>
+                  <span>{msg.role === "user" ? "Tu" : "Assistente"}</span>
+                  {msg.meta?.route && (
+                    <span className="badge" style={{ borderColor: routeColorMap[msg.meta.route] || "#777" }}>
+                      {msg.meta.route}
+                    </span>
+                  )}
+                </header>
+                <p>{msg.text}</p>
+                {msg.meta && (
+                  <footer>
+                    <span>Confidence: {toPercent(msg.meta.confidence)}</span>
+                    <span>Judge overall: {msg.meta.judge?.overall ?? "-"}</span>
+                    <span>Trace steps: {msg.meta.trace?.length ?? 0}</span>
+                  </footer>
+                )}
+                {msg.role === "assistant" && msg.meta && <JudgePanel meta={msg.meta} />}
+              </article>
+            ))}
+            {pending && <div className="typing">Elaborazione in corso...</div>}
+          </div>
+
+          <form className="composer" onSubmit={sendMessage}>
+            <textarea
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Scrivi una domanda..."
+              rows={3}
+            />
+            <div className="composer-actions">
+              <span className="hint">Endpoint: {CHAT_STREAM_ENDPOINT}</span>
+              <button type="submit" disabled={pending}>Invia</button>
+            </div>
+          </form>
+
+          {pending && (
+            <section className="live-box">
+              <strong>Live routing</strong>
+              <div className="live-grid">
+                <span>Route: {live.route}</span>
+                <span>Metodo: {live.method}</span>
+                <span>Confidence: {toPercent(live.confidence)}</span>
+                <span>Judge overall: {live.judgeOverall ?? "-"}</span>
+              </div>
+            </section>
+          )}
+
+          {error && <div className="error-box">{error}</div>}
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const architectureRef = useRef(null);
+  const [screen, setScreen] = useState("home");
   const [query, setQuery] = useState("");
   const [pending, setPending] = useState(false);
   const [agents, setAgents] = useState([]);
@@ -305,90 +580,26 @@ export default function App() {
       },
     ]);
     setError("");
+    setLive({ route: "-", method: "-", confidence: null, judgeOverall: null });
+  }
+
+  if (screen === "home") {
+    return <HomePage onStartChat={() => setScreen("chat")} agents={agents} architectureRef={architectureRef} />;
   }
 
   return (
-    <div className="page-shell">
-      <aside className="left-panel">
-        <h1>AgenticAI Console</h1>
-        <p className="subhead">Knowledge-first chat per testare routing, giudice e trace.</p>
-
-        <div className="thread-card">
-          <div>
-            <strong>Thread</strong>
-            <div className="mono">{activeThreadLabel}</div>
-          </div>
-          <button type="button" onClick={resetThread}>Nuovo thread</button>
-        </div>
-
-        <h2>Domini</h2>
-        <ul className="agent-list">
-          {agents.map((agent) => (
-            <li key={agent.key}>
-              <span className="dot" style={{ background: routeColorMap[agent.key] || "#8a8a8a" }} />
-              <div>
-                <strong>{agent.label}</strong>
-                <p>{agent.description}</p>
-              </div>
-            </li>
-          ))}
-          {agents.length === 0 && <li className="empty">Nessun dominio disponibile dal backend.</li>}
-        </ul>
-      </aside>
-
-      <main className="chat-panel">
-        <div className="messages">
-          {messages.map((msg) => (
-            <article key={msg.id} className={`msg ${msg.role}`}>
-              <header>
-                <span>{msg.role === "user" ? "Tu" : "Assistente"}</span>
-                {msg.meta?.route && (
-                  <span className="badge" style={{ borderColor: routeColorMap[msg.meta.route] || "#777" }}>
-                    {msg.meta.route}
-                  </span>
-                )}
-              </header>
-              <p>{msg.text}</p>
-              {msg.meta && (
-                <footer>
-                  <span>Confidence: {toPercent(msg.meta.confidence)}</span>
-                  <span>Judge overall: {msg.meta.judge?.overall ?? "-"}</span>
-                  <span>Trace steps: {msg.meta.trace?.length ?? 0}</span>
-                </footer>
-              )}
-              {msg.role === "assistant" && msg.meta && <JudgePanel meta={msg.meta} />}
-            </article>
-          ))}
-          {pending && <div className="typing">Elaborazione in corso...</div>}
-        </div>
-
-        <form className="composer" onSubmit={sendMessage}>
-          <textarea
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Scrivi una domanda..."
-            rows={3}
-          />
-          <div className="composer-actions">
-            <span className="hint">Endpoint: {CHAT_STREAM_ENDPOINT}</span>
-            <button type="submit" disabled={pending}>Invia</button>
-          </div>
-        </form>
-
-        {pending && (
-          <section className="live-box">
-            <strong>Live routing</strong>
-            <div className="live-grid">
-              <span>Route: {live.route}</span>
-              <span>Metodo: {live.method}</span>
-              <span>Confidence: {toPercent(live.confidence)}</span>
-              <span>Judge overall: {live.judgeOverall ?? "-"}</span>
-            </div>
-          </section>
-        )}
-
-        {error && <div className="error-box">{error}</div>}
-      </main>
-    </div>
+    <ChatScreen
+      query={query}
+      setQuery={setQuery}
+      pending={pending}
+      agents={agents}
+      messages={messages}
+      sendMessage={sendMessage}
+      resetThread={resetThread}
+      error={error}
+      live={live}
+      activeThreadLabel={activeThreadLabel}
+      onBackHome={() => setScreen("home")}
+    />
   );
 }

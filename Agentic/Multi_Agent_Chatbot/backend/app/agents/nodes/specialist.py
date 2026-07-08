@@ -28,11 +28,19 @@ async def specialist_node(state: GraphState) -> dict:
     # RAG: recupero il contesto solo se il dominio lo prevede. Lo riuso se già presente
     # (nel giro di reflection non ha senso rifare la retrieval).
     context = state.get("retrieved_context")
+    rag_status = "cached" if context is not None else "disabled"
     if context is None:
-        context = (
-            await retrieve(agent.collection, query)
-            if agent.use_rag else []
-        )
+        if agent.use_rag:
+            try:
+                context = await retrieve(agent.collection, query)
+                rag_status = "hit" if context else "miss"
+            except Exception:
+                # La RAG e opzionale: se fallisce, lo specialista risponde comunque.
+                context = []
+                rag_status = "error"
+        else:
+            context = []
+            rag_status = "disabled"
 
     model = resolve_model(agent)   # dev → base model; prod → adapter LoRA del dominio
     prev = state.get("judge")
@@ -60,6 +68,7 @@ async def specialist_node(state: GraphState) -> dict:
         "model": model,
         "reflection": is_reflection,
         "used_rag": bool(context),
+        "rag_status": rag_status,
     }]
     return {
         "draft_answer": answer,

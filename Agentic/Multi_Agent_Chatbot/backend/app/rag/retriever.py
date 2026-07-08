@@ -19,12 +19,13 @@ async def _load_all_chunks(collection: str) -> list[str]:
     """Recupera tutti i passaggi della collection da Qdrant (solo testo)."""
     await ensure_collection(collection)
     # Recupero tutti i punti dalla collection
-    points = await client.scroll(
+    scrolled = await client.scroll(
         collection_name=collection,
         limit=settings.RAG_FETCH_K * 1000,  #prendo un numero alto di punti per avere più contesto
         with_payload=True,
         with_vector=False,
     )
+    points = scrolled[0] if isinstance(scrolled, tuple) else scrolled
     chunks = [p.payload.get("text", "") for p in points]
     return [c for c in chunks if c.strip()]  #filtra chunk vuoti
 

@@ -24,7 +24,7 @@ class GraphState(TypedDict, total=False):
 
     route: str                 # chiave del dominio scelto (es. "crypto_pqc")
     route_confidence: float    # confidenza del router (0-1)
-    route_method: str          # "embedding" | "llm_fallback" (per il trace)
+    route_method: str          # "embedding" | "llm_fallback" | "keyword_fallback" (per il trace)
 
     retrieved_context: list[str]  # passaggi recuperati dalla RAG (se il dominio la usa)
 

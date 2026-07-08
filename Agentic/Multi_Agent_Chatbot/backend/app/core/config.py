@@ -11,9 +11,9 @@ class Settings(BaseSettings):
 
     # --- Endpoint LLM (OpenAI-compatible): in prod vLLM ---  ← vLLM
     # In vLLM il "model" che passiamo è il nome del base model OPPURE di un adapter LoRA.
-    LLM_BASE_URL: str = "http://vllm:8000/v1"
-    LLM_API_KEY: str = "not-needed"           # vLLM non controlla la key
-    LLM_BASE_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"  # usato dal generalista e dal giudice
+    LLM_BASE_URL: str = "http://localhost:11434/v1"
+    LLM_API_KEY: str = "ollama"
+    LLM_BASE_MODEL: str = "qwen2.5:7b-instruct"      # usato dal generalista e dal giudice
     USE_ADAPTERS: bool = False                       # se True → usa adapter LoRA per specialisti
 
     # --- Embeddings (server OpenAI-compatible dedicato, es. vLLM/TEI con bge-m3) ---  ← vLLM
@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     SPECIALIST_TEMPERATURE: float = 0.3        # specialisti: precisi, poco creativi
     JUDGE_TEMPERATURE: float = 0.0             # giudice: deterministico
     MAX_TOKENS: int = 1024
+    
+    #--- RAG ---
+    RAG_TOP_K: int = 4 # passaggi da recuperare per la RAG (se il dominio la usa)
+    RAG_FETCH_K: int = 20 #candidati presi da ogni retriever prima della filtratura (per evitare di perdere passaggi rilevanti)
+    RERANK_ENABLED: bool = False #se True, usa il modello LLM per riordinare i passaggi recuperati dalla RAG (più costoso ma più preciso)
+    RERANK_MODEL: str = "BAAI/bge-reranker-v2-m3"
 
 
 # Singleton importato ovunque: `from app.core.config import settings`

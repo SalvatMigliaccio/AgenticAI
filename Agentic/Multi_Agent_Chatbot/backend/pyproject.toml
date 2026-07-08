@@ -24,6 +24,7 @@ dependencies = [
     # --- RAG ---
     "qdrant-client>=1.9",          # vector DB
     "rank-bm25>=0.2",              # componente sparsa BM25 della retrieval ibrida
+    "pypdf>=5.0",                  # estrazione testo dai PDF in ingest
 
     # --- infrastructure ---
     "redis>=5.0",                  # semantic cache

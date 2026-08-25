@@ -1,83 +1,87 @@
-<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="120" y1="70" x2="1450" y2="820" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F8FBFF"/>
-      <stop offset="1" stop-color="#EEF4FF"/>
-    </linearGradient>
-    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
-      <stop stop-color="#FFFFFF" stop-opacity="0.98"/>
-      <stop offset="1" stop-color="#F3F7FF" stop-opacity="0.95"/>
-    </linearGradient>
-    <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#121A30"/>
-      <stop offset="1" stop-color="#22345F"/>
-    </linearGradient>
-    <filter id="shadow" x="0" y="0" width="1600" height="900" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="20" stdDeviation="30" flood-color="#2F4A7A" flood-opacity="0.10"/>
-    </filter>
-  </defs>
+<svg width="1600" height="640" viewBox="0 0 1600 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="archTitle archDesc">
+  <title id="archTitle">Multi-Agent Chatbot architecture</title>
+  <desc id="archDesc">Frontend talks to an Nginx gateway, which proxies to the FastAPI backend. The backend runs a LangGraph pipeline (Preprocess, Router, Specialist, Judge, Finalize) with a retry loop from Judge back to Specialist, calls an Ollama/LLM server, and reads/writes Qdrant, Postgres and Redis.</desc>
 
-  <rect x="30" y="30" width="1540" height="840" rx="36" fill="url(#bg)"/>
-  <circle cx="220" cy="180" r="130" fill="#DDE8FF" fill-opacity="0.55"/>
-  <circle cx="1390" cy="160" r="120" fill="#FBE2EC" fill-opacity="0.7"/>
-  <circle cx="1250" cy="730" r="170" fill="#DFF7F2" fill-opacity="0.7"/>
+  <!-- top row: Frontend -> Gateway -> Backend -> LLM server -->
+  <path d="M320 195H420" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M680 195H780" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M1160 195H1260" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="420" cy="195" r="5" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="780" cy="195" r="5" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="1260" cy="195" r="5" fill="rgba(255,255,255,0.5)"/>
 
-  <g filter="url(#shadow)">
-    <rect x="150" y="140" width="1300" height="620" rx="34" fill="url(#card)"/>
-  </g>
+  <!-- Frontend -->
+  <rect x="60" y="110" width="260" height="170" rx="10" fill="#111214" stroke="rgba(255,255,255,0.14)"/>
+  <text x="88" y="158" fill="#f2f2f3" font-family="Space Grotesk, Arial, sans-serif" font-size="17" font-weight="700">Frontend</text>
+  <text x="88" y="182" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">React + Vite SPA</text>
+  <text x="88" y="204" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Chat UI, live routing panel,</text>
+  <text x="88" y="224" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">SSE stream consumer</text>
 
-  <text x="220" y="215" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Architecture Overview</text>
-  <text x="220" y="255" fill="#617190" font-family="Inter, Arial, sans-serif" font-size="20">Request flow, specialist orchestration and infrastructure services in one visual.</text>
+  <!-- Gateway -->
+  <rect x="420" y="110" width="260" height="170" rx="10" fill="#111214" stroke="rgba(255,255,255,0.14)"/>
+  <text x="448" y="158" fill="#f2f2f3" font-family="Space Grotesk, Arial, sans-serif" font-size="17" font-weight="700">Gateway</text>
+  <text x="448" y="182" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Nginx reverse proxy</text>
+  <text x="448" y="204" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Rate limiting, SSE-aware</text>
+  <text x="448" y="224" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">proxying, single entry point</text>
 
-  <rect x="220" y="320" width="220" height="130" rx="24" fill="#FFFFFF" stroke="#D5DDF0"/>
-  <text x="252" y="372" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Frontend React</text>
-  <text x="252" y="402" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Hero, chat UI, SSE events,</text>
-  <text x="252" y="424" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">live Judge panel</text>
+  <!-- Backend (emphasized) -->
+  <rect x="780" y="70" width="380" height="260" rx="10" fill="#f2f2f3"/>
+  <text x="808" y="112" fill="#0a0a0a" font-family="Space Grotesk, Arial, sans-serif" font-size="19" font-weight="700">Backend</text>
+  <text x="808" y="133" fill="#4b4b4f" font-family="Manrope, Arial, sans-serif" font-size="13">FastAPI + LangGraph</text>
 
-  <rect x="500" y="320" width="220" height="130" rx="24" fill="#FFFFFF" stroke="#D5DDF0"/>
-  <text x="532" y="372" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Nginx Gateway</text>
-  <text x="532" y="402" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Reverse proxy, static assets,</text>
-  <text x="532" y="424" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">API routing and rate limiting</text>
+  <text x="808" y="163" fill="#2563a8" font-family="JetBrains Mono, Consolas, monospace" font-size="12" font-weight="700">01</text>
+  <text x="832" y="163" fill="#0a0a0a" font-family="Manrope, Arial, sans-serif" font-size="13">Preprocess</text>
 
-  <rect x="780" y="300" width="280" height="170" rx="28" fill="url(#dark)"/>
-  <text x="818" y="360" fill="#F4F7FF" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Backend FastAPI + LangGraph</text>
-  <text x="818" y="396" fill="#CAD6F5" font-family="Inter, Arial, sans-serif" font-size="14">Router → Specialist → Judge → Finalize</text>
-  <text x="818" y="420" fill="#CAD6F5" font-family="Inter, Arial, sans-serif" font-size="14">Streaming responses and trace updates</text>
+  <text x="808" y="189" fill="#2563a8" font-family="JetBrains Mono, Consolas, monospace" font-size="12" font-weight="700">02</text>
+  <text x="832" y="189" fill="#0a0a0a" font-family="Manrope, Arial, sans-serif" font-size="13">Router</text>
 
-  <rect x="1140" y="320" width="220" height="130" rx="24" fill="#FFFFFF" stroke="#D5DDF0"/>
-  <text x="1172" y="372" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Ollama / LLM Server</text>
-  <text x="1172" y="402" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Base model or specialist adapter</text>
-  <text x="1172" y="424" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">for domain-specific answers</text>
+  <text x="808" y="215" fill="#2563a8" font-family="JetBrains Mono, Consolas, monospace" font-size="12" font-weight="700">03</text>
+  <text x="832" y="215" fill="#0a0a0a" font-family="Manrope, Arial, sans-serif" font-size="13">Specialist</text>
 
-  <rect x="355" y="560" width="210" height="120" rx="22" fill="#F8FBFF" stroke="#CFD9EE"/>
-  <text x="387" y="610" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Qdrant</text>
-  <text x="387" y="638" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Knowledge chunks, dense/sparse</text>
-  <text x="387" y="660" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">retrieval support</text>
+  <text x="808" y="241" fill="#2563a8" font-family="JetBrains Mono, Consolas, monospace" font-size="12" font-weight="700">04</text>
+  <text x="832" y="241" fill="#0a0a0a" font-family="Manrope, Arial, sans-serif" font-size="13">Judge</text>
 
-  <rect x="695" y="560" width="210" height="120" rx="22" fill="#F8FBFF" stroke="#CFD9EE"/>
-  <text x="727" y="610" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Postgres</text>
-  <text x="727" y="638" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Checkpoint memory, threads,</text>
-  <text x="727" y="660" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">conversation persistence</text>
+  <text x="808" y="267" fill="#2563a8" font-family="JetBrains Mono, Consolas, monospace" font-size="12" font-weight="700">05</text>
+  <text x="832" y="267" fill="#0a0a0a" font-family="Manrope, Arial, sans-serif" font-size="13">Finalize</text>
 
-  <rect x="1035" y="560" width="210" height="120" rx="22" fill="#F8FBFF" stroke="#CFD9EE"/>
-  <text x="1067" y="610" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Redis</text>
-  <text x="1067" y="638" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">Ready for semantic caching</text>
-  <text x="1067" y="660" fill="#6A7894" font-family="Inter, Arial, sans-serif" font-size="14">and low-latency state helpers</text>
+  <!-- retry loop: Judge back to Specialist -->
+  <path d="M945 236 C1005 236 1005 210 945 210" stroke="#c0392b" stroke-width="2" fill="none"/>
+  <polygon points="945,210 954,205 954,215" fill="#c0392b"/>
+  <text x="1012" y="226" fill="#c0392b" font-family="JetBrains Mono, Consolas, monospace" font-size="11">retry</text>
 
-  <path d="M440 385H500" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
-  <path d="M720 385H780" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
-  <path d="M1060 385H1140" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
+  <!-- LLM server -->
+  <rect x="1260" y="110" width="260" height="170" rx="10" fill="#111214" stroke="rgba(255,255,255,0.14)"/>
+  <text x="1288" y="158" fill="#f2f2f3" font-family="Space Grotesk, Arial, sans-serif" font-size="17" font-weight="700">LLM server</text>
+  <text x="1288" y="182" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Ollama (dev) / vLLM (prod)</text>
+  <text x="1288" y="204" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Base model or per-domain</text>
+  <text x="1288" y="224" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">LoRA adapter</text>
 
-  <path d="M920 470V520" stroke="#91A3C9" stroke-width="4" stroke-linecap="round"/>
-  <path d="M920 520H460V560" stroke="#91A3C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M920 520H800V560" stroke="#91A3C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M920 520H1140V560" stroke="#91A3C9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Backend -> infra services -->
+  <path d="M970 330V390" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M640 390H1300" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M640 390V430" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M970 390V430" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M1300 390V430" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="970" cy="390" r="5" fill="rgba(255,255,255,0.5)"/>
 
-  <circle cx="920" cy="520" r="8" fill="#91A3C9"/>
-  <circle cx="500" cy="385" r="8" fill="#91A3C9"/>
-  <circle cx="780" cy="385" r="8" fill="#91A3C9"/>
-  <circle cx="1140" cy="385" r="8" fill="#91A3C9"/>
+  <!-- Qdrant -->
+  <rect x="520" y="430" width="240" height="150" rx="10" fill="#111214" stroke="rgba(255,255,255,0.14)"/>
+  <text x="548" y="478" fill="#f2f2f3" font-family="Space Grotesk, Arial, sans-serif" font-size="17" font-weight="700">Qdrant</text>
+  <text x="548" y="502" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Vector store for RAG</text>
+  <text x="548" y="522" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Hybrid dense + BM25</text>
+  <text x="548" y="542" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">retrieval, one collection/domain</text>
 
-  <rect x="864" y="356" width="112" height="34" rx="17" fill="#F4B860" fill-opacity="0.22" stroke="#E9B457"/>
-  <text x="886" y="378" fill="#83561A" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700">Judge loop</text>
+  <!-- Postgres -->
+  <rect x="850" y="430" width="240" height="150" rx="10" fill="#111214" stroke="rgba(255,255,255,0.14)"/>
+  <text x="878" y="478" fill="#f2f2f3" font-family="Space Grotesk, Arial, sans-serif" font-size="17" font-weight="700">Postgres</text>
+  <text x="878" y="502" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">LangGraph checkpointer</text>
+  <text x="878" y="522" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Conversation state, keeps</text>
+  <text x="878" y="542" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">the API layer stateless</text>
+
+  <!-- Redis -->
+  <rect x="1180" y="430" width="240" height="150" rx="10" fill="#111214" stroke="rgba(255,255,255,0.14)"/>
+  <text x="1208" y="478" fill="#f2f2f3" font-family="Space Grotesk, Arial, sans-serif" font-size="17" font-weight="700">Redis</text>
+  <text x="1208" y="502" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">Provisioned, not wired in</text>
+  <text x="1208" y="522" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">yet &#8212; intended for</text>
+  <text x="1208" y="542" fill="#8f8f96" font-family="Manrope, Arial, sans-serif" font-size="13">semantic caching</text>
 </svg>
